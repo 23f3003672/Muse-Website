@@ -6,14 +6,13 @@ import os
 
 # --- Configuration ---
 app = Flask(__name__)
-# IMPORTANT: In a production environment like Render, FLASK_SECRET_KEY must be set
-# via environment variables.
+# Read sensitive variables from Render's environment config
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key_if_not_set') 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///muse.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- Admin Credentials (Read from environment variables set on Render) ---
+# Admin Credentials (Read from environment variables set on Render)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'password123')
 
@@ -23,7 +22,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False) # Plain text for simplicity
+    password = db.Column(db.String(120), nullable=False)
     orders = db.relationship('Order', backref='customer', lazy=True)
     def __repr__(self):
         return f'<User {self.username}>'
@@ -32,7 +31,7 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Float, nullable=False) # Stored in Rupees (₹)
+    price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     image = db.Column(db.String(200), default='default.jpg')
     category = db.Column(db.String(50), default='Other') 
@@ -52,31 +51,38 @@ class Order(db.Model):
     def get_products(self):
         return json.loads(self.products_json)
 
-# --- Initial Setup and Seeding ---
+# --- Initial Setup and Seeding (Modified for Auto-Seeding) ---
 
 def init_db():
-    """Creates the database and adds initial data/admin credentials."""
-    # NOTE: This function is called manually via the Render Shell.
-    with app.app_context():
-        # Only attempt to create if tables don't exist
-        db.create_all()
-        
-        # Check if sample data already exists (prevents duplicates)
-        if Product.query.count() == 0:
-            print("Seeding sample data...")
-            sample_products = [
-                Product(name='Rose Gold Heart Pendant', description='A delicate rose gold heart pendant with small stones.', price=1499.00, stock=15, image='pendant_heart.jpg', category='Pendant Sets'),
-                Product(name='Sapphire Stud Earrings', description='Small but striking sapphire earrings for daily wear.', price=750.50, stock=30, image='earrings.jpg', category='Earrings'),
-                Product(name='Classic Diamond Necklace Set', description='Full bridal-style necklace set with matching earrings.', price=2999.00, stock=10, image='necklace_classic.jpg', category='Necklace Sets'),
-                Product(name='Emerald Drop Earrings', description='Elegant emerald cut drop earrings, perfect for evenings.', price=1250.00, stock=20, image='earrings_emerald.jpg', category='Earrings'),
-                Product(name='Solitaire Pendant & Chain', description='Simple solitaire pendant with a thin golden chain.', price=1800.00, stock=12, image='pendant_solitaire.jpg', category='Pendant Sets'),
-                Product(name='Pearl Choker Necklace', description='A modern choker-style necklace with tiny freshwater pearls.', price=2400.00, stock=8, image='necklace_pearl.jpg', category='Necklace Sets'),
-            ]
-            db.session.add_all(sample_products)
-            db.session.commit()
-            print("Sample products added.")
+    """Initializes the database and seeds sample data if product table is empty."""
+    db.create_all()
+    
+    # Check if sample data already exists (prevents duplicates)
+    if Product.query.count() == 0:
+        print("Seeding sample data...")
+        sample_products = [
+            Product(name='Rose Gold Heart Pendant', description='A delicate rose gold heart pendant with small stones.', price=1499.00, stock=15, image='pendant_heart.jpg', category='Pendant Sets'),
+            Product(name='Sapphire Stud Earrings', description='Small but striking sapphire earrings for daily wear.', price=750.50, stock=30, image='earrings.jpg', category='Earrings'),
+            Product(name='Classic Diamond Necklace Set', description='Full bridal-style necklace set with matching earrings.', price=2999.00, stock=10, image='necklace_classic.jpg', category='Necklace Sets'),
+            Product(name='Emerald Drop Earrings', description='Elegant emerald cut drop earrings, perfect for evenings.', price=1250.00, stock=20, image='earrings_emerald.jpg', category='Earrings'),
+            Product(name='Solitaire Pendant & Chain', description='Simple solitaire pendant with a thin golden chain.', price=1800.00, stock=12, image='pendant_solitaire.jpg', category='Pendant Sets'),
+            Product(name='Pearl Choker Necklace', description='A modern choker-style necklace with tiny freshwater pearls.', price=2400.00, stock=8, image='necklace_pearl.jpg', category='Necklace Sets'),
+        ]
+        db.session.add_all(sample_products)
+        db.session.commit()
+        print("Sample products added.")
 
-# --- Helper Functions ---
+# ⚠️ AUTOMATIC DB INITIALIZATION HOOK FOR RENDER FREE TIER ⚠️
+# This decorator ensures the database is set up the first time the server handles a request.
+with app.app_context():
+    @app.before_request
+    def initialize_database():
+        # Check if DB needs initialization (only run once)
+        if not hasattr(app, 'database_initialized'):
+            init_db()
+            app.database_initialized = True
+
+# --- Helper Functions (Unchanged) ---
 
 def admin_required(f):
     from functools import wraps
@@ -88,7 +94,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- User Authentication Routes ---
+# --- User Authentication Routes (Unchanged) ---
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -455,7 +461,7 @@ def update_order_status(order_id):
 
 # --- Run Application (For local development) ---
 if __name__ == '__main__':
-    # Initialize DB (create tables and sample data) only if run locally
-    init_db()
+    # This runs the development server and calls init_db() locally
+    with app.app_context():
+        init_db()
     app.run(debug=True)
-    # NOTE: Gunicorn handles production startup via the Dockerfile
