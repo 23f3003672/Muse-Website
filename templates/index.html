@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<header class="p-5 mb-4 rounded-3 text-center" style="background-color: var(--light-clay);">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold" style="color: var(--dark-color);">Discover Your Inner Sparkle</h1>
+        <p class="col-md-8 fs-4 mx-auto" style="color: var(--dark-color);">Elegant, modern, and high-quality artificial jewelry for every occasion. Shop the latest collection now!</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('shop') }}" role="button">Shop Now</a>
+    </div>
+</header>
+
+<h2 class="mb-4 text-center" style="color: var(--dark-color);">Featured Products</h2>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for product in products %}
+    <div class="col">
+        <div class="card h-100">
+            <img src="{{ url_for('static', filename='images/' + product.image) }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title" style="color: var(--dark-color);">{{ product.name }}</h5>
+                <p class="card-text text-muted">{{ product.description[:70] }}...</p>
+                <p class="card-text fs-4 mt-auto text-highlight">₹{{ "%.2f"|format(product.price) }}</p>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-secondary btn-sm" style="color: var(--dark-color); border-color: var(--dark-color);">View Details</a>
+                    <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-primary btn-sm">Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

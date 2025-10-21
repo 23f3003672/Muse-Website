@@ -1,0 +1,10 @@
+venv/
+.venv/
+pycache/
+*.pyc
+*.pyo
+.env
+.flaskenv
+*.log
+!Dockerfile
+!docker-compose.yml

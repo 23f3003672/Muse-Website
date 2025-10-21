@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg" style="border: 2px solid var(--dark-color);">
+            <div class="card-header" style="background-color: var(--dark-color);">
+                <h3 class="text-center mb-0" style="color: var(--primary-color);">🔒 Admin Access</h3>
+            </div>
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4" style="color: var(--dark-color);">Admin Login</h2>
+                <form method="POST" action="{{ url_for('admin_login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">Credentials: admin / password123 (See app.py)</div>
+                    </div>
+                    <button type="submit" class="btn w-100" style="background-color: var(--dark-color); color: var(--primary-color);">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

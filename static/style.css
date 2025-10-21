@@ -1,0 +1,14 @@
+/* Custom Styles for Muse E-commerce */
+
+/* Ensure the sticky footer has space */
+body {
+    padding-bottom: 70px; /* Adjust based on footer height */
+}
+
+.card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+/* You can add more detailed custom styles here if needed,
+   but per the plan, Bootstrap is handling the heavy lifting. */

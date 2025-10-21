@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" class="img-fluid rounded" alt="{{ product.name }}">
+    </div>
+    <div class="col-md-7">
+        <h1 class="display-4">{{ product.name }}</h1>
+        <p class="lead">₹{{ "%.2f"|format(product.price) }}</p>
+        <hr>
+        <p>{{ product.description }}</p>
+
+        <p class="fw-bold">
+            Availability: 
+            {% if product.stock > 0 %}
+                <span class="text-success">{{ product.stock }} in stock</span>
+            {% else %}
+                <span class="text-danger">Out of Stock</span>
+            {% endif %}
+        </p>
+
+        {% if product.stock > 0 %}
+            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" class="d-flex align-items-center">
+                <div class="input-group" style="width: 150px;">
+                    <span class="input-group-text">Qty</span>
+                    <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-control" style="text-align: center;">
+                </div>
+                <button type="submit" class="btn btn-lg btn-primary ms-3">Add to Cart</button>
+            </form>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{{ url_for('shop') }}" class="btn btn-outline-dark">← Back to Shop</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
