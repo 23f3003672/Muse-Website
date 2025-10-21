@@ -21,4 +21,4 @@ COPY . .
 # IMPORTANT: Since your Flask file is named 'app.py' in the previous context, we use 'app:app'.
 # If you renamed it to 'run.py', you would change this to 'run:app'.
 # Based on the previous session's context, your main file is 'app.py'.
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+CMD gunicorn --bind 0.0.0.0:$PORT app:app
